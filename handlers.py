@@ -228,13 +228,18 @@ def setup_handlers(client):
         user_data[user_id].location = f"{lat},{lon}"
         user_data[user_id].link_gmaps = f"https://www.google.com/maps?q={lat},{lon}"
         
-        # Automatically detect STO from nearest ODP
-        detected_sto = odp_service.get_sto_from_nearest_odp(lat, lon)
-        if detected_sto:
-            user_data[user_id].sto = detected_sto
-            await event.reply(f"📍 **Lokasi diterima!**\n🏢 **STO terdeteksi:** {detected_sto}\n\n📸 **Kirim foto:**")
+        # Get complete ODP information
+        odp_info = odp_service.get_complete_odp_info(lat, lon)
+        if odp_info:
+            user_data[user_id].odp_info = odp_info
+            user_data[user_id].sto = odp_info.get("STO")
+            user_data[user_id].odp = odp_info.get("ODP")
+            
+            # Format ODP information for user
+            odp_message = odp_service.format_odp_info_for_user(odp_info)
+            await event.reply(f"📍 **Lokasi diterima!**\n\n{odp_message}\n\n📸 **Kirim foto:**")
         else:
-            await event.reply("📍 **Lokasi diterima!**\n⚠️ **STO tidak dapat terdeteksi otomatis**\n\n📸 **Kirim foto:**")
+            await event.reply("📍 **Lokasi diterima!**\n⚠️ **Informasi ODP tidak dapat terdeteksi**\n\n📸 **Kirim foto:**")
         
         user_data[user_id].step = 'photo'
     
@@ -263,20 +268,25 @@ def setup_handlers(client):
         if coords:
             user_data[user_id].location = coords
             
-            # Extract lat, lon from coords string for STO detection
+            # Extract lat, lon from coords string for ODP detection
             try:
                 lat, lon = map(float, coords.split(','))
                 
-                # Automatically detect STO from nearest ODP
-                detected_sto = odp_service.get_sto_from_nearest_odp(lat, lon)
-                if detected_sto:
-                    user_data[user_id].sto = detected_sto
-                    await event.reply(f"📍 **Lokasi diterima!**\n🏢 **STO terdeteksi:** {detected_sto}\n\n📸 **Kirim foto:**")
+                # Get complete ODP information
+                odp_info = odp_service.get_complete_odp_info(lat, lon)
+                if odp_info:
+                    user_data[user_id].odp_info = odp_info
+                    user_data[user_id].sto = odp_info.get("STO")
+                    user_data[user_id].odp = odp_info.get("ODP")
+                    
+                    # Format ODP information for user
+                    odp_message = odp_service.format_odp_info_for_user(odp_info)
+                    await event.reply(f"📍 **Lokasi diterima!**\n\n{odp_message}\n\n📸 **Kirim foto:**")
                 else:
-                    await event.reply("📍 **Lokasi diterima!**\n⚠️ **STO tidak dapat terdeteksi otomatis**\n\n📸 **Kirim foto:**")
+                    await event.reply("📍 **Lokasi diterima!**\n⚠️ **Informasi ODP tidak dapat terdeteksi**\n\n📸 **Kirim foto:**")
                     
             except (ValueError, AttributeError):
-                await event.reply("📍 **Lokasi diterima!**\n⚠️ **STO tidak dapat terdeteksi otomatis**\n\n📸 **Kirim foto:**")
+                await event.reply("📍 **Lokasi diterima!**\n⚠️ **Informasi ODP tidak dapat terdeteksi**\n\n📸 **Kirim foto:**")
             
             user_data[user_id].step = 'photo'
         else:

@@ -46,16 +46,30 @@ class GoogleSheetsManager:
             timestamp = format_timestamp()
             no = len(self.sheet.get_all_values())
             
+            # Base row data
             row_data = [
-                no, timestamp, data['user_id'], data['nama_sa'], data['witel'], 
-                data['telda'], data['sto'], data['cluster'], data['nama_usaha'], 
-                data['jenis_usaha'], data['pic'], data['status_pic'], data['hpwa'], data['internet'], 
-                data['kecepatan'], data['biaya'], data['voc'], 
-                data.get('location', ''), data.get('file_link', ''), 
+                no, timestamp, data['user_id'], data['nama_sa'], data['witel'],
+                data['telda'], data.get('sto', ''), data.get('odp', ''), data['cluster'], data['nama_usaha'],
+                data['jenis_usaha'], data['pic'], data.get('status_pic', ''), data['hpwa'], data['internet'],
+                data['kecepatan'], data['biaya'], data['voc'],
+                data.get('location', ''), data.get('file_link', ''),
                 data.get('link_gmaps', ''), "Default"
             ]
             
+            # Add ODP-related columns if they exist (excluding certain fields)
+            excluded_odp_fields = ['odp_latitude', 'odp_longitude', 'odp_avai', 'odp_distance_km']
+            odp_columns = []
+            for key, value in data.items():
+                if (key.startswith('odp_') and
+                    key not in ['odp_sto', 'odp_odp'] and  # Avoid duplicates with main fields
+                    key not in excluded_odp_fields):  # Exclude specified fields
+                    odp_columns.append(value if value is not None else '')
+            
+            # Append ODP columns to row data
+            row_data.extend(odp_columns)
+            
             self.sheet.append_row(row_data)
+            logger.info(f"Successfully saved data with {len(odp_columns)} additional ODP columns")
             return True
         except Exception as e:
             logger.error(f"Failed to save to spreadsheet: {e}")

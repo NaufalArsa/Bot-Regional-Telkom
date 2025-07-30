@@ -133,12 +133,14 @@ The modular structure now includes ODP search functionality:
 - **Output**: 5 nearest ODP locations with distances and availability
 - **Data Source**: Google Sheets "ODP" tab
 
-### Automatic STO Detection
-The bot now automatically detects STO based on location:
+### Automatic STO Detection & Complete ODP Information
+The bot now automatically detects STO and captures complete ODP information:
 - **Trigger**: When user provides location (Google Maps link or location share) during data collection
-- **Process**: Finds nearest ODP and extracts STO information
+- **Process**: Finds nearest ODP and extracts all available ODP information
+- **Data Captured**: STO, ODP name, and other relevant ODP columns (excluding coordinates, port availability, and distance)
+- **User Feedback**: Displays complete ODP information to user for verification (including coordinates, distance, and port availability)
+- **Data Storage**: Selected ODP information is recorded to the spreadsheet with prefixed columns (excludes LATITUDE, LONGITUDE, AVAI, DISTANCE_KM)
 - **Fallback**: Uses STO from user credentials if detection fails
-- **Feedback**: Informs user whether STO was detected automatically
 
 ### Usage:
 1. **ODP Search**: User sends `/odp` command → Bot requests location → Bot returns 5 nearest ODPs

@@ -108,8 +108,8 @@ class ODPService:
         
         return msg
     
-    def get_sto_from_nearest_odp(self, user_lat: float, user_lon: float) -> Optional[str]:
-        """Get STO from the nearest ODP location."""
+    def get_complete_odp_info(self, user_lat: float, user_lon: float) -> Optional[Dict]:
+        """Get complete ODP information from the nearest ODP location."""
         nearest_odp = self.find_nearest_odp(user_lat, user_lon, limit=1)
         if nearest_odp is None or nearest_odp.empty:
             return None
@@ -118,18 +118,63 @@ class ODPService:
             # Get the first (nearest) ODP
             first_row = nearest_odp.iloc[0]
             
-            # Check if STO column exists
-            if "STO" in nearest_odp.columns:
-                sto = first_row["STO"]
-                logger.info(f"Found STO '{sto}' from nearest ODP")
-                return str(sto) if sto else None
-            else:
-                logger.warning("STO column not found in ODP data")
-                return None
+            # Create a dictionary with all available ODP information
+            odp_info = {}
+            for column in nearest_odp.columns:
+                value = first_row[column]
+                # Convert to string and handle empty values
+                odp_info[column] = str(value) if pd.notna(value) and value != '' else None
+            
+            logger.info(f"Found complete ODP info: {odp_info}")
+            return odp_info
                 
         except Exception as e:
-            logger.error(f"Error getting STO from nearest ODP: {e}")
+            logger.error(f"Error getting complete ODP info: {e}")
             return None
+    
+    def get_sto_from_nearest_odp(self, user_lat: float, user_lon: float) -> Optional[str]:
+        """Get STO from the nearest ODP location."""
+        odp_info = self.get_complete_odp_info(user_lat, user_lon)
+        if odp_info and "STO" in odp_info:
+            return odp_info["STO"]
+        return None
+    
+    def format_odp_info_for_user(self, odp_info: Dict) -> str:
+        """Format ODP information for user display."""
+        if not odp_info:
+            return "❌ Informasi ODP tidak tersedia."
+        
+        msg = "📍 **Informasi ODP Terdekat:**\n\n"
+        
+        # Priority fields to show first
+        priority_fields = ["STO", "ODP", "LATITUDE", "LONGITUDE", "DISTANCE_KM", "AVAI"]
+        
+        # Show priority fields first
+        for field in priority_fields:
+            if field in odp_info and odp_info[field] is not None:
+                if field == "DISTANCE_KM":
+                    try:
+                        distance_m = float(odp_info[field]) * 1000
+                        msg += f"🔹 **Jarak:** {distance_m:.2f} meter\n"
+                    except (ValueError, TypeError):
+                        msg += f"🔹 **{field}:** {odp_info[field]}\n"
+                elif field == "AVAI":
+                    msg += f"🔹 **Port Tersedia:** {odp_info[field]}\n"
+                elif field in ["LATITUDE", "LONGITUDE"]:
+                    try:
+                        coord = float(odp_info[field])
+                        msg += f"🔹 **{field}:** {coord:.6f}\n"
+                    except (ValueError, TypeError):
+                        msg += f"🔹 **{field}:** {odp_info[field]}\n"
+                else:
+                    msg += f"🔹 **{field}:** {odp_info[field]}\n"
+        
+        # Show other fields
+        for field, value in odp_info.items():
+            if field not in priority_fields and value is not None:
+                msg += f"🔹 **{field}:** {value}\n"
+        
+        return msg
 
 # Global instance
 odp_service = ODPService()

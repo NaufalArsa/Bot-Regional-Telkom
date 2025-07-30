@@ -14,11 +14,11 @@ COLUMNS = {
     'witel': 4,
     'telda': 5,
     'sto': 6,
-    'cluster': 7,
-    'nama_usaha': 8,
-    'jenis_usaha': 9,
-    'pic': 10,
-    'status_pic': 11,
+    'odp':7, 
+    'cluster': 8,
+    'nama_usaha': 9,
+    'jenis_usaha': 10,
+    'pic': 11,
     'hpwa': 12,
     'internet': 13,
     'kecepatan': 14,
@@ -63,7 +63,8 @@ class UserData:
         self.step = 'nama_usaha'
         
         # Data to be collected
-        self.sto = credentials.get('sto')  # Use STO from credentials as fallback
+        self.sto = None
+        self.odp = None
         self.nama_usaha = None
         self.pic = None
         self.status_pic = None
@@ -76,15 +77,19 @@ class UserData:
         self.location = None
         self.link_gmaps = None
         self.file_link = None
+        
+        # ODP information
+        self.odp_info = None  # Will store complete ODP information as dict
     
     def to_dict(self) -> Dict:
         """Convert to dictionary for spreadsheet storage."""
-        return {
+        data = {
             'user_id': self.user_id,
             'nama_sa': self.nama_sa,
             'witel': self.witel,
             'telda': self.telda,
             'sto': self.sto,
+            'odp': self.odp,
             'cluster': self.cluster,
             'nama_usaha': self.nama_usaha,
             'pic': self.pic,
@@ -99,6 +104,18 @@ class UserData:
             'link_gmaps': self.link_gmaps,
             'file_link': self.file_link
         }
+        
+        # Add ODP information if available (excluding certain fields)
+        if self.odp_info:
+            # Fields to exclude from sheet storage
+            excluded_fields = ['LATITUDE', 'LONGITUDE', 'AVAI', 'DISTANCE_KM']
+            
+            for key, value in self.odp_info.items():
+                if key not in excluded_fields:
+                    # Add ODP fields with prefix to avoid conflicts
+                    data[f'odp_{key.lower()}'] = value
+        
+        return data
 
 class UserCredentials:
     """Data structure for user credentials from Google Sheet."""
@@ -108,7 +125,6 @@ class UserCredentials:
         self.nama_sa = record.get('Nama')
         self.witel = record.get('Witel')
         self.telda = record.get('Telda')
-        self.sto = record.get('STO')  # Keep STO from credentials as fallback
         self.cluster = record.get('Cluster')
     
     def to_dict(self) -> Dict:
@@ -118,7 +134,6 @@ class UserCredentials:
             'nama_sa': self.nama_sa,
             'witel': self.witel,
             'telda': self.telda,
-            'sto': self.sto,
             'cluster': self.cluster
         }
 
