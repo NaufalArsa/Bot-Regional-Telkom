@@ -53,7 +53,15 @@ This Telegram bot has been refactored into a modular structure for better mainta
   - Button callback handlers
   - Location and photo handlers
 
-### 7. `main.py`
+### 7. `odp_service.py`
+- **Purpose**: ODP (Optical Distribution Point) service operations
+- **Contains**:
+  - ODPService class for ODP location search
+  - Distance calculations using geopy
+  - ODP data retrieval from Google Sheets
+  - Result formatting for display
+
+### 8. `main.py`
 - **Purpose**: Main application entry point
 - **Contains**:
   - Bot initialization
@@ -116,15 +124,32 @@ The original `bot.py` file contained all functionality in a single file. The mod
 - **Bot event handling** → `handlers.py`
 - **Main execution** → `main.py`
 
+## New Features
+
+### ODP (Optical Distribution Point) Search
+The modular structure now includes ODP search functionality:
+- **Command**: `/odp` - Search for nearest ODP locations
+- **Input**: Google Maps link or location sharing
+- **Output**: 5 nearest ODP locations with distances and availability
+- **Data Source**: Google Sheets "ODP" tab
+
+### Usage:
+1. User sends `/odp` command
+2. Bot requests location (Google Maps link or location share)
+3. Bot calculates distances to all ODP locations
+4. Bot returns 5 nearest ODPs with details
+
 ## Dependencies
 
-The modular structure maintains the same external dependencies:
+The modular structure maintains the same external dependencies plus new ones:
 - `telethon` - Telegram bot framework
 - `gspread` - Google Sheets API
 - `supabase` - File storage
 - `python-dotenv` - Environment variables
 - `oauth2client` - Google authentication
 - `requests` - HTTP requests
+- `geopy` - Distance calculations for ODP search
+- `pandas` - Data processing for ODP operations
 
 ## Future Enhancements
 

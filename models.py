@@ -18,15 +18,16 @@ COLUMNS = {
     'nama_usaha': 8,
     'jenis_usaha': 9,
     'pic': 10,
-    'hpwa': 11,
-    'internet': 12,
-    'kecepatan': 13,
-    'biaya': 14,
-    'voc': 15,
-    'location': 16,
-    'file_link': 17,
-    'link_gmaps': 18,
-    'validitas': 19
+    'status_pic': 11,
+    'hpwa': 12,
+    'internet': 13,
+    'kecepatan': 14,
+    'biaya': 15,
+    'voc': 16,
+    'location': 17,
+    'file_link': 18,
+    'link_gmaps': 19,
+    'validitas': 20
 }
 
 # Options for buttons
@@ -65,6 +66,7 @@ class UserData:
         # Data to be collected
         self.nama_usaha = None
         self.pic = None
+        self.status_pic = None
         self.hpwa = None
         self.jenis_usaha = None
         self.internet = None
@@ -86,6 +88,7 @@ class UserData:
             'cluster': self.cluster,
             'nama_usaha': self.nama_usaha,
             'pic': self.pic,
+            'status_pic': self.status_pic,
             'hpwa': self.hpwa,
             'jenis_usaha': self.jenis_usaha,
             'internet': self.internet,
@@ -126,5 +129,4 @@ class UserRecord:
         self.no = record.get('No')
         self.nama_usaha = record.get('Nama Usaha')
         self.pic = record.get('PIC')
-        self.hpwa = record.get('HP/WA')
         self.timestamp = record.get('Timestamp')

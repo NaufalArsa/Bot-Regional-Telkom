@@ -15,6 +15,7 @@ from models import (
     UserData, JENIS_USAHA, INTERNET_OPTIONS, 
     KECEPATAN_OPTIONS, BIAYA_OPTIONS
 )
+
 from database import get_user_credentials, save_to_spreadsheet, get_user_records
 from storage import upload_to_supabase
 from utils import (
@@ -22,12 +23,14 @@ from utils import (
     format_user_data_summary, format_channel_message,
     format_user_records, format_welcome_message
 )
+from odp_service import odp_service
 
 logger = logging.getLogger(__name__)
 
 # Data storage
 user_data: Dict[str, UserData] = {}
 user_state: Dict[str, str] = {}
+odp_user_state: Dict[str, bool] = {}  # Track users waiting for ODP location input
 
 def setup_handlers(client):
     """Setup all bot handlers."""
@@ -77,6 +80,34 @@ def setup_handlers(client):
         message = format_user_records(records)
         await event.reply(message)
     
+    @client.on(events.NewMessage(pattern='/odp'))
+    async def odp_handler(event):
+        """Handle /odp command."""
+        if event.is_private:
+            user_id = str(event.sender_id)
+            odp_user_state[user_id] = True
+            await event.reply("Silakan kirim link Google Maps atau share lokasi Anda untuk mencari ODP terdekat.")
+    
+    async def process_odp_nearest(event, user_id: str, lat: float, lon: float):
+        """Process ODP nearest search."""
+        user_maps = f"https://www.google.com/maps?q={lat},{lon}"
+        await event.reply(
+            f"📍 Lokasi Anda: {lat:.6f}, {lon:.6f}\n🔗 [Lihat di Google Maps]({user_maps})\n\nSedang mencari 5 ODP terdekat ...",
+            parse_mode='markdown'
+        )
+        
+        nearest_odp = odp_service.find_nearest_odp(lat, lon)
+        if nearest_odp is None:
+            await event.reply("❌ Gagal mengambil data ODP dari Google Sheets.")
+            return
+        
+        if nearest_odp.empty:
+            await event.reply("❌ Data ODP tidak valid (kolom tidak lengkap).")
+            return
+        
+        message = odp_service.format_odp_results(nearest_odp)
+        await event.reply(message, parse_mode='markdown')
+    
     @client.on(events.NewMessage())
     async def message_handler(event):
         """Handle text messages during data collection."""
@@ -102,9 +133,14 @@ def setup_handlers(client):
             current_data.nama_usaha = event.text
             current_data.step = 'pic'
             await event.reply("👤 **Masukkan Nama PIC:**")
-        
+
         elif current_step == 'pic':
             current_data.pic = event.text
+            current_data.step = 'status_pic'
+            await event.reply("🪪 **Masukkan status PIC:**")
+        
+        elif current_step == 'status_pic':
+            current_data.status_pic = event.text
             current_data.step = 'hpwa'
             await event.reply("📱 **Masukkan Nomor HP/WA:**")
         
@@ -175,6 +211,15 @@ def setup_handlers(client):
         """Handle location sharing."""
         user_id = str(event.sender_id)
         
+        # Check if user is waiting for ODP location
+        if odp_user_state.get(user_id):
+            lat = event.message.geo.lat
+            lon = event.message.geo.long
+            await process_odp_nearest(event, user_id, lat, lon)
+            odp_user_state[user_id] = False
+            return
+        
+        # Handle regular data collection location
         if user_id not in user_data or user_data[user_id].step != 'location':
             return
         
@@ -191,6 +236,18 @@ def setup_handlers(client):
         """Handle Google Maps link."""
         user_id = str(event.sender_id)
         
+        # Check if user is waiting for ODP location
+        if odp_user_state.get(user_id):
+            coords_tuple = extract_coords_from_gmaps_link(event.text.strip())
+            if coords_tuple:
+                lat, lon = coords_tuple
+                await process_odp_nearest(event, user_id, lat, lon)
+                odp_user_state[user_id] = False
+            else:
+                await event.reply("❌ Gagal mengekstrak koordinat dari link. Kirim ulang lokasi Anda.")
+            return
+        
+        # Handle regular data collection Google Maps link
         if user_id not in user_data or user_data[user_id].step != 'location':
             return
         

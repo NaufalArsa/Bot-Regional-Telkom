@@ -6,7 +6,7 @@ Contains helper functions for coordinate extraction, button creation, etc.
 import re
 import requests
 import logging
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from telethon import Button
 
 logger = logging.getLogger(__name__)
@@ -22,51 +22,35 @@ def create_buttons(options: List[str], prefix: str) -> List[List[Button]]:
             row = []
     return buttons
 
-def extract_coords_from_gmaps_link(link: str) -> Optional[str]:
-    """Extract latitude and longitude from Google Maps link, including shortlinks."""
+def extract_coords_from_gmaps_link(link: str) -> Tuple[Optional[float], Optional[float]]:
+    """Extract latitude and longitude from Google Maps short or long link."""
     if not link or not link.strip():
-        return None
-    
+        return None, None
     try:
-        # 1. Check direct coordinates in link
-        match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', link)
+        # follow redirects to get the final URL page
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+        response = requests.get(link, headers=headers, allow_redirects=True, timeout=50)
+        html = response.text
+        # Try to extract lat,lng from embed or preview URLs
+        match = re.search(
+            r"https://www\.google\.com/maps/preview/place/.*?@(-?\d+\.\d+),(-?\d+\.\d+)",
+            html
+        )
         if match:
             lat, lng = match.groups()
-            return f"{lat},{lng}"
-        
-        # 2. Check q=lat,lon pattern in link
-        match = re.search(r'[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)', link)
-        if match:
-            lat, lng = match.groups()
-            return f"{lat},{lng}"
-        
-        # 3. If shortlink, resolve and check redirect
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(link, headers=headers, allow_redirects=True, timeout=10)
-        final_url = response.url
-        
-        # Check @lat,lon pattern in final_url
-        match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
-        if match:
-            lat, lng = match.groups()
-            return f"{lat},{lng}"
-        
-        # Check q=lat,lon pattern in final_url
-        match = re.search(r'[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)', final_url)
-        if match:
-            lat, lng = match.groups()
-            return f"{lat},{lng}"
-        
-        # Check in response.text (sometimes in HTML)
-        match = re.search(r'(-?\d+\.\d+),(-?\d+\.\d+)', response.text)
-        if match:
-            lat, lng = match.groups()
-            return f"{lat},{lng}"
-            
+            return float(lat), float(lng)
+        # fallback: try plain lat,lng patterns in URL or page
+        full_url = response.url
+        match2 = re.search(r"[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)", full_url)
+        if match2:
+            lat, lng = match2.groups()
+            return float(lat), float(lng)
     except Exception as e:
         logger.error(f"Error extracting coordinates from link {link}: {e}")
-    
-    return None
+    # Fallback to Selenium if requests/regex failed
+    return None, None
 
 def format_user_data_summary(data: dict) -> str:
     """Format user data for display in confirmation message."""
@@ -74,6 +58,7 @@ def format_user_data_summary(data: dict) -> str:
         f"✅ **Data berhasil disimpan!**\n\n"
         f"🏢 Usaha: {data['nama_usaha']}\n"
         f"👤 PIC: {data['pic']}\n"
+        f"🪪 Status PIC: {data.get('status_pic', 'Tidak ada')}\n"
         f"📱 HP/WA: {data['hpwa']}\n"
         f"🏭 Jenis Usaha: {data['jenis_usaha']}\n"
         f"🌐 Internet: {data['internet']}\n"
@@ -106,7 +91,6 @@ def format_user_records(records: List[dict]) -> str:
         message += f"🔹 No: {record['no']}\n"
         message += f"🏢 Usaha: {record['nama_usaha']}\n"
         message += f"👤 PIC: {record['pic']}\n"
-        message += f"📱 HP/WA: {record['hpwa']}\n"
         message += f"📅 Waktu: {record['timestamp']}\n\n"
     
     return message
@@ -119,5 +103,8 @@ def format_welcome_message(credentials: dict) -> str:
         f"Telda: {credentials['telda']}\n"
         f"Cluster: {credentials['cluster']}\n\n"
         f"STO: {credentials['sto']}\n\n"
-        "Ketik /add untuk menambahkan data baru atau /record untuk melihat data sebelumnya."
+        f"Command yang tersedia:\n"
+        f"• /add: Tambah data usaha baru\n"
+        f"• /record: Lihat data usaha yang pernah Anda input\n" 
+        f"• /odp: Cari ODP terdekat\n"
     )

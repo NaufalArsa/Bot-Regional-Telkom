@@ -49,7 +49,7 @@ class GoogleSheetsManager:
             row_data = [
                 no, timestamp, data['user_id'], data['nama_sa'], data['witel'], 
                 data['telda'], data['sto'], data['cluster'], data['nama_usaha'], 
-                data['jenis_usaha'], data['pic'], data['hpwa'], data['internet'], 
+                data['jenis_usaha'], data['pic'], data['status_pic'], data['hpwa'], data['internet'], 
                 data['kecepatan'], data['biaya'], data['voc'], 
                 data.get('location', ''), data.get('file_link', ''), 
                 data.get('link_gmaps', ''), "Default"
@@ -75,6 +75,17 @@ class GoogleSheetsManager:
         except Exception as e:
             logger.error(f"Error getting user records: {e}")
             return []
+    
+    def get_sheet_data_by_name(self, spreadsheet_name: str, sheet_name: str) -> Optional[List[List]]:
+        """Get data from a specific sheet by name."""
+        try:
+            spreadsheet = self.gc.open(spreadsheet_name)
+            worksheet = spreadsheet.worksheet(sheet_name)
+            data = worksheet.get_all_values()
+            return data
+        except Exception as e:
+            logger.error(f"Error getting data from sheet {sheet_name}: {e}")
+            return None
 
 # Global instance
 sheets_manager = GoogleSheetsManager()
