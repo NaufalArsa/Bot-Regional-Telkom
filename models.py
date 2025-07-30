@@ -1,0 +1,130 @@
+"""
+Data models and constants for the Telegram bot.
+Contains data structures, column mappings, and option lists.
+"""
+
+from typing import Dict, List
+
+# Column indices for spreadsheet
+COLUMNS = {
+    'no': 0,
+    'timestamp': 1,
+    'user_id': 2,
+    'nama_sa': 3,
+    'witel': 4,
+    'telda': 5,
+    'sto': 6,
+    'cluster': 7,
+    'nama_usaha': 8,
+    'jenis_usaha': 9,
+    'pic': 10,
+    'hpwa': 11,
+    'internet': 12,
+    'kecepatan': 13,
+    'biaya': 14,
+    'voc': 15,
+    'location': 16,
+    'file_link': 17,
+    'link_gmaps': 18,
+    'validitas': 19
+}
+
+# Options for buttons
+JENIS_USAHA = [
+    "Hotel", "Manufaktur", "Cafe", "Tempat Wisata", 
+    "Rumah Sakit", "Sekolah", "Industri", "Distributor", "Pergudangan"
+]
+
+INTERNET_OPTIONS = [
+    "IndiHome", "Indibiz", "Biznet", "First Media", 
+    "MNC Play", "MyRepublic", "Oxygen", "CBN", 
+    "XL Home", "Indosat GIG", "Iconnet", "ISP Lokal"
+]
+
+KECEPATAN_OPTIONS = [
+    "10-50 Mbps", "50-75 Mbps", "75-100 Mbps", ">100 Mbps"
+]
+
+BIAYA_OPTIONS = [
+    "<200.000", "200.000-300.000", 
+    "300.000-400.000", "400.000-700.000", ">700.000"
+]
+
+class UserData:
+    """Data structure for user information during data collection."""
+    
+    def __init__(self, user_id: str, credentials: Dict):
+        self.user_id = user_id
+        self.nama_sa = credentials['nama_sa']
+        self.witel = credentials['witel']
+        self.telda = credentials['telda']
+        self.sto = credentials['sto']
+        self.cluster = credentials['cluster']
+        self.step = 'nama_usaha'
+        
+        # Data to be collected
+        self.nama_usaha = None
+        self.pic = None
+        self.hpwa = None
+        self.jenis_usaha = None
+        self.internet = None
+        self.kecepatan = None
+        self.biaya = None
+        self.voc = None
+        self.location = None
+        self.link_gmaps = None
+        self.file_link = None
+    
+    def to_dict(self) -> Dict:
+        """Convert to dictionary for spreadsheet storage."""
+        return {
+            'user_id': self.user_id,
+            'nama_sa': self.nama_sa,
+            'witel': self.witel,
+            'telda': self.telda,
+            'sto': self.sto,
+            'cluster': self.cluster,
+            'nama_usaha': self.nama_usaha,
+            'pic': self.pic,
+            'hpwa': self.hpwa,
+            'jenis_usaha': self.jenis_usaha,
+            'internet': self.internet,
+            'kecepatan': self.kecepatan,
+            'biaya': self.biaya,
+            'voc': self.voc,
+            'location': self.location,
+            'link_gmaps': self.link_gmaps,
+            'file_link': self.file_link
+        }
+
+class UserCredentials:
+    """Data structure for user credentials from Google Sheet."""
+    
+    def __init__(self, record: Dict):
+        self.kode = record.get('Kode SA')
+        self.nama_sa = record.get('Nama')
+        self.witel = record.get('Witel')
+        self.telda = record.get('Telda')
+        self.sto = record.get('STO')
+        self.cluster = record.get('Cluster')
+    
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return {
+            'kode': self.kode,
+            'nama_sa': self.nama_sa,
+            'witel': self.witel,
+            'telda': self.telda,
+            'sto': self.sto,
+            'cluster': self.cluster
+        }
+
+class UserRecord:
+    """Data structure for user's previous records."""
+    
+    def __init__(self, record: Dict):
+        self.no = record.get('No')
+        self.nama_usaha = record.get('Nama Usaha')
+        self.pic = record.get('PIC')
+        self.hpwa = record.get('HP/WA')
+        self.timestamp = record.get('Timestamp')
