@@ -107,7 +107,6 @@ def get_user_records(user_id: str) -> List[Dict]:
             'no': record.no,
             'nama_usaha': record.nama_usaha,
             'pic': record.pic,
-            'hpwa': record.hpwa,
             'timestamp': record.timestamp
         }
         for record in records

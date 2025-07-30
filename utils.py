@@ -66,6 +66,7 @@ def format_user_data_summary(data: dict) -> str:
         f"💰 Biaya: {data['biaya']}\n"
         f"💬 VOC: {data['voc']}\n"
         f"📍 Lokasi: {data.get('location', 'Tidak ada')}\n"
+        f"🏢 STO: {data.get('sto', 'Tidak ada')}\n"
         f"📊 Data telah ditambahkan ke spreadsheet"
     )
 
@@ -102,7 +103,6 @@ def format_welcome_message(credentials: dict) -> str:
         f"Witel: {credentials['witel']}\n"
         f"Telda: {credentials['telda']}\n"
         f"Cluster: {credentials['cluster']}\n\n"
-        f"STO: {credentials['sto']}\n\n"
         f"Command yang tersedia:\n"
         f"• /add: Tambah data usaha baru\n"
         f"• /record: Lihat data usaha yang pernah Anda input\n" 

@@ -41,7 +41,7 @@ class ODPService:
         if df is None:
             return None
         
-        if not all(col in df.columns for col in ["ODP", "LATITUDE", "LONGITUDE"]):
+        if not all(col in df.columns for col in ["STO", "ODP", "LATITUDE", "LONGITUDE"]):
             logger.error("ODP data missing required columns")
             return None
         
@@ -49,7 +49,7 @@ class ODPService:
             user_location = (user_lat, user_lon)
             
             # Ensure AVAI column exists
-            columns_needed = ["ODP", "LATITUDE", "LONGITUDE"]
+            columns_needed = ["STO", "ODP", "LATITUDE", "LONGITUDE"]
             if "AVAI" in df.columns:
                 columns_needed.append("AVAI")
             else:
@@ -57,7 +57,7 @@ class ODPService:
                 columns_needed.append("AVAI")
             
             # Filter out rows with missing data
-            locations = df[columns_needed].dropna(subset=["ODP", "LATITUDE", "LONGITUDE"])
+            locations = df[columns_needed].dropna(subset=["STO", "ODP", "LATITUDE", "LONGITUDE"])
             
             # Convert lat/lon to float for distance calculation
             locations["LATITUDE"] = locations["LATITUDE"].astype(float)
@@ -84,6 +84,7 @@ class ODPService:
         
         msg = "\n=== 5 ODP Terdekat ===\n"
         for i, row in enumerate(nearest_odp.itertuples(index=False), 1):
+            sto = getattr(row, 'STO', 'N/A')
             odp = getattr(row, 'ODP', '-')
             lat = getattr(row, 'LATITUDE', 0.0)
             lon = getattr(row, 'LONGITUDE', 0.0)
@@ -106,6 +107,29 @@ class ODPService:
             )
         
         return msg
+    
+    def get_sto_from_nearest_odp(self, user_lat: float, user_lon: float) -> Optional[str]:
+        """Get STO from the nearest ODP location."""
+        nearest_odp = self.find_nearest_odp(user_lat, user_lon, limit=1)
+        if nearest_odp is None or nearest_odp.empty:
+            return None
+        
+        try:
+            # Get the first (nearest) ODP
+            first_row = nearest_odp.iloc[0]
+            
+            # Check if STO column exists
+            if "STO" in nearest_odp.columns:
+                sto = first_row["STO"]
+                logger.info(f"Found STO '{sto}' from nearest ODP")
+                return str(sto) if sto else None
+            else:
+                logger.warning("STO column not found in ODP data")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error getting STO from nearest ODP: {e}")
+            return None
 
 # Global instance
 odp_service = ODPService()

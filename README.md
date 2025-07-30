@@ -133,11 +133,16 @@ The modular structure now includes ODP search functionality:
 - **Output**: 5 nearest ODP locations with distances and availability
 - **Data Source**: Google Sheets "ODP" tab
 
+### Automatic STO Detection
+The bot now automatically detects STO based on location:
+- **Trigger**: When user provides location (Google Maps link or location share) during data collection
+- **Process**: Finds nearest ODP and extracts STO information
+- **Fallback**: Uses STO from user credentials if detection fails
+- **Feedback**: Informs user whether STO was detected automatically
+
 ### Usage:
-1. User sends `/odp` command
-2. Bot requests location (Google Maps link or location share)
-3. Bot calculates distances to all ODP locations
-4. Bot returns 5 nearest ODPs with details
+1. **ODP Search**: User sends `/odp` command → Bot requests location → Bot returns 5 nearest ODPs
+2. **Data Collection with STO Detection**: User provides location during `/add` process → Bot automatically detects and sets STO → User continues with photo upload
 
 ## Dependencies
 

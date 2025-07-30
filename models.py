@@ -59,11 +59,11 @@ class UserData:
         self.nama_sa = credentials['nama_sa']
         self.witel = credentials['witel']
         self.telda = credentials['telda']
-        self.sto = credentials['sto']
         self.cluster = credentials['cluster']
         self.step = 'nama_usaha'
         
         # Data to be collected
+        self.sto = credentials.get('sto')  # Use STO from credentials as fallback
         self.nama_usaha = None
         self.pic = None
         self.status_pic = None
@@ -108,7 +108,7 @@ class UserCredentials:
         self.nama_sa = record.get('Nama')
         self.witel = record.get('Witel')
         self.telda = record.get('Telda')
-        self.sto = record.get('STO')
+        self.sto = record.get('STO')  # Keep STO from credentials as fallback
         self.cluster = record.get('Cluster')
     
     def to_dict(self) -> Dict:

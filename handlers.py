@@ -227,9 +227,16 @@ def setup_handlers(client):
         lon = event.message.geo.long
         user_data[user_id].location = f"{lat},{lon}"
         user_data[user_id].link_gmaps = f"https://www.google.com/maps?q={lat},{lon}"
-        user_data[user_id].step = 'photo'
         
-        await event.reply("📸 **Kirim foto:**")
+        # Automatically detect STO from nearest ODP
+        detected_sto = odp_service.get_sto_from_nearest_odp(lat, lon)
+        if detected_sto:
+            user_data[user_id].sto = detected_sto
+            await event.reply(f"📍 **Lokasi diterima!**\n🏢 **STO terdeteksi:** {detected_sto}\n\n📸 **Kirim foto:**")
+        else:
+            await event.reply("📍 **Lokasi diterima!**\n⚠️ **STO tidak dapat terdeteksi otomatis**\n\n📸 **Kirim foto:**")
+        
+        user_data[user_id].step = 'photo'
     
     @client.on(events.NewMessage(func=lambda e: 'maps.google.com' in e.text or 'goo.gl/maps' in e.text or 'maps.app.goo.gl' in e.text))
     async def gmaps_handler(event):
@@ -255,8 +262,23 @@ def setup_handlers(client):
         coords = extract_coords_from_gmaps_link(event.text)
         if coords:
             user_data[user_id].location = coords
+            
+            # Extract lat, lon from coords string for STO detection
+            try:
+                lat, lon = map(float, coords.split(','))
+                
+                # Automatically detect STO from nearest ODP
+                detected_sto = odp_service.get_sto_from_nearest_odp(lat, lon)
+                if detected_sto:
+                    user_data[user_id].sto = detected_sto
+                    await event.reply(f"📍 **Lokasi diterima!**\n🏢 **STO terdeteksi:** {detected_sto}\n\n📸 **Kirim foto:**")
+                else:
+                    await event.reply("📍 **Lokasi diterima!**\n⚠️ **STO tidak dapat terdeteksi otomatis**\n\n📸 **Kirim foto:**")
+                    
+            except (ValueError, AttributeError):
+                await event.reply("📍 **Lokasi diterima!**\n⚠️ **STO tidak dapat terdeteksi otomatis**\n\n📸 **Kirim foto:**")
+            
             user_data[user_id].step = 'photo'
-            await event.reply("📸 **Kirim foto:**")
         else:
             await event.reply("❌ Gagal mengekstrak koordinat dari link. Kirim ulang lokasi Anda.")
     
