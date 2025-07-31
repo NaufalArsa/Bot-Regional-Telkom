@@ -49,7 +49,7 @@ def extract_coords_from_gmaps_link(link: str) -> Tuple[Optional[float], Optional
             return float(lat), float(lng)
     except Exception as e:
         logger.error(f"Error extracting coordinates from link {link}: {e}")
-    # Fallback to Selenium if requests/regex failed
+    
     return None, None
 
 def format_user_data_summary(data: dict) -> str:

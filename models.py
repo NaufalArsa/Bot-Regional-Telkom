@@ -37,18 +37,18 @@ JENIS_USAHA = [
 ]
 
 INTERNET_OPTIONS = [
-    "IndiHome", "Indibiz", "Biznet", "First Media", 
+    "Belum Ada", "IndiHome", "Indibiz", "Biznet", "First Media", 
     "MNC Play", "MyRepublic", "Oxygen", "CBN", 
-    "XL Home", "Indosat GIG", "Iconnet", "ISP Lokal"
+    "XL Home", "Indosat GIG", "Iconnet", "ISP Lokal", "Other"
 ]
 
 KECEPATAN_OPTIONS = [
-    "10-50 Mbps", "50-75 Mbps", "75-100 Mbps", ">100 Mbps"
+    "Belum Ada", "10-50 Mbps", "50-75 Mbps", "75-100 Mbps", ">100 Mbps"
 ]
 
 BIAYA_OPTIONS = [
     "<200.000", "200.000-300.000", 
-    "300.000-400.000", "400.000-700.000", ">700.000"
+    "300.000-500.000", ">500.000"
 ]
 
 class UserData:
